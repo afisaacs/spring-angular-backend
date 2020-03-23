@@ -163,6 +163,7 @@ public class ClienteRestController {
 				clienteActual.setApellido(cliente.getApellido());
 				clienteActual.setNombre(cliente.getNombre());
 				clienteActual.setEmail(cliente.getEmail());
+				clienteActual.setCreateAt(cliente.getCreateAt());
 				cliente = clienteService.save(clienteActual);
 				ok = true;
 				mensaje = "Cliente editado satisfactoriamente";
