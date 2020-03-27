@@ -1,5 +1,10 @@
 package com.clientes.app.springboot.backend.apirest.controllers;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,9 +13,11 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -22,18 +29,27 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.clientes.app.springboot.backend.apirest.models.entity.Cliente;
 import com.clientes.app.springboot.backend.apirest.models.services.IClienteService;
+import com.clientes.app.springboot.backend.apirest.models.services.IUploadFileService;
 
-@RestController()
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = { "http://localhost:4200" })
 public class ClienteRestController {
 
 	@Autowired
 	private IClienteService clienteService;
+	
+	@Autowired
+	private IUploadFileService uploadFileService;
 
 	@GetMapping("/cliente")
 	public ResponseEntity<?> index() {
@@ -164,6 +180,7 @@ public class ClienteRestController {
 				clienteActual.setNombre(cliente.getNombre());
 				clienteActual.setEmail(cliente.getEmail());
 				clienteActual.setCreateAt(cliente.getCreateAt());
+				clienteActual.setRegion(cliente.getRegion());
 				cliente = clienteService.save(clienteActual);
 				ok = true;
 				mensaje = "Cliente editado satisfactoriamente";
@@ -188,10 +205,24 @@ public class ClienteRestController {
 		String mensaje = null;
 		HttpStatus status = null;
 		try {
-			clienteService.delete(id);
-			ok = true;
-			mensaje = "Cliente eliminado satisfactoriamente";
-			status = HttpStatus.OK;
+			Cliente cliente = clienteService.findById(id);
+			if (cliente == null) {
+				ok = false;
+				mensaje = "El cliente ID: ".concat(id.toString()).concat(" no existe en la base de datos");
+				status = HttpStatus.NOT_FOUND;
+			} else {
+				if (cliente.getImagen() != null && !cliente.getImagen().isEmpty()) {
+					Path rutaArchivoAnterior = Paths.get("uploads").resolve(cliente.getImagen()).toAbsolutePath();
+					File archivoAnterior = rutaArchivoAnterior.toFile();
+					if(archivoAnterior.exists() && archivoAnterior.isFile() && archivoAnterior.canRead()) {
+						archivoAnterior.delete();
+					}
+				}
+				clienteService.delete(id);
+				ok = true;
+				mensaje = "Cliente eliminado satisfactoriamente";
+				status = HttpStatus.OK;
+			}
 		} catch (DataAccessException e) {
 			ok = false;
 			mensaje= "Error eliminando cliente en la base de datos";
@@ -201,6 +232,67 @@ public class ClienteRestController {
 		response.put("mensaje", mensaje);
 		response.put("ok", ok);
 		return new ResponseEntity<Map<String, Object>>(response, status);
+	}
+
+	@PostMapping("cliente/upload")
+	public ResponseEntity<?> upload(@RequestParam MultipartFile archivo, @RequestParam Long id) {
+		Map<String, Object> response = new HashMap<>();
+		Boolean ok = null;
+		String mensaje = null;
+		HttpStatus status = null;
+		try {
+			Cliente cliente = clienteService.findById(id);
+			if (cliente == null) {
+				ok = false;
+				mensaje = "El cliente ID: ".concat(id.toString()).concat(" no existe en la base de datos");
+				status = HttpStatus.NOT_FOUND;
+			} else if (archivo.isEmpty()) {
+				ok = false;
+				mensaje = "Cargar un archivo es obligatorio";
+				status = HttpStatus.BAD_REQUEST;
+			} else {
+				if (cliente.getImagen() != null && !cliente.getImagen().isEmpty()) {
+					if(uploadFileService.eliminar(cliente.getImagen())) {
+						log.info("Imagen ".concat(cliente.getImagen()).concat(" eliminada"));
+					} else {
+						log.info("No fue posible eliminar la imagen ".concat(cliente.getImagen()));
+					}
+				}
+				String nombreArchivo = uploadFileService.guardar(archivo);
+				cliente.setImagen(nombreArchivo);
+				clienteService.save(cliente);
+				ok = true;
+				mensaje = "Imagen cargada correctamente al cliente ".concat(cliente.getNombre()).concat(" ").concat(cliente.getApellido());
+				status = HttpStatus.CREATED;
+				response.put("cliente", cliente);
+			}
+		} catch (DataAccessException e) {
+			ok = false;
+			mensaje= "Error eliminando cliente en la base de datos";
+			status = HttpStatus.INTERNAL_SERVER_ERROR;
+			response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
+		} catch (IOException e) {
+			ok = false;
+			mensaje= "Error subiendo el archivo al servidor";
+			status = HttpStatus.INTERNAL_SERVER_ERROR;
+			response.put("error", e.getMessage().concat(": ").concat(e.toString()));
+		}
+		response.put("mensaje", mensaje);
+		response.put("ok", ok);
+		return new ResponseEntity<Map<String, Object>>(response, status);
+	}
+	
+	@GetMapping("/upload/img/{nombreImagen:.+}")
+	public ResponseEntity<Resource> verImagen(@PathVariable String nombreImagen) {
+		Resource recurso = null;
+		try {
+			recurso = uploadFileService.cargar(nombreImagen);
+		} catch (MalformedURLException e) {
+			log.error("Error", e);
+		}
+		HttpHeaders cabecera = new HttpHeaders();
+		cabecera.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"".concat(nombreImagen).concat("\""));
+		return new ResponseEntity<>(recurso, cabecera, HttpStatus.OK);
 	}
 
 }
