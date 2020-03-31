@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -97,6 +98,7 @@ public class ClienteRestController {
 		return new ResponseEntity<Map<String, Object>>(response, status);
 	}
 
+	@Secured({"ROLE_USER", "ROLE_ADMIN"})
 	@GetMapping("cliente/{id}")
 	public ResponseEntity<?> show(@PathVariable Long id) {
 		Map<String, Object> response = new HashMap<>();
@@ -125,6 +127,7 @@ public class ClienteRestController {
 		return new ResponseEntity<Map<String, Object>>(response, status);
 	}
 
+	@Secured("ROLE_ADMIN")
 	@PostMapping("/cliente")
 	public ResponseEntity<?> create(@Valid @RequestBody Cliente cliente, BindingResult result) {
 		Map<String, Object> response = new HashMap<>();
@@ -159,6 +162,7 @@ public class ClienteRestController {
 		return new ResponseEntity<Map<String, Object>>(response, status);
 	}
 
+	@Secured("ROLE_ADMIN")
 	@PutMapping("/cliente/{id}")
 	public ResponseEntity<?> update(@Valid @RequestBody Cliente cliente, @PathVariable Long id, BindingResult result) {
 		Map<String, Object> response = new HashMap<>();
@@ -198,6 +202,7 @@ public class ClienteRestController {
 		return new ResponseEntity<Map<String, Object>>(response, status);
 	}
 
+	@Secured("ROLE_ADMIN")
 	@DeleteMapping("/cliente/{id}")
 	public ResponseEntity<?> delete(@PathVariable Long id) {
 		Map<String, Object> response = new HashMap<>();
@@ -234,6 +239,7 @@ public class ClienteRestController {
 		return new ResponseEntity<Map<String, Object>>(response, status);
 	}
 
+	@Secured({"ROLE_USER", "ROLE_ADMIN"})
 	@PostMapping("cliente/upload")
 	public ResponseEntity<?> upload(@RequestParam MultipartFile archivo, @RequestParam Long id) {
 		Map<String, Object> response = new HashMap<>();
@@ -281,7 +287,7 @@ public class ClienteRestController {
 		response.put("ok", ok);
 		return new ResponseEntity<Map<String, Object>>(response, status);
 	}
-	
+
 	@GetMapping("/upload/img/{nombreImagen:.+}")
 	public ResponseEntity<Resource> verImagen(@PathVariable String nombreImagen) {
 		Resource recurso = null;
