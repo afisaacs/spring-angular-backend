@@ -20,6 +20,8 @@ insert into clientes (nombre, apellido, email, create_at, region_id) values ('Ma
 insert into clientes (nombre, apellido, email, create_at, region_id) values ('Tornado', 'Roe', 'tornado.roe@gmail.com', '2020-03-05', 3);
 insert into clientes (nombre, apellido, email, create_at, region_id) values ('Jane', 'Doe', 'jane.doe@gmail.com', '2020-03-06', 4);
 
+/* crear usuarios y roles */
+
 insert into usuarios (username, password, enabled, nombre, apellido, email) values ('aaron', '$2a$10$li9pKHF35RFkxTQPxz.44.E79kOIy2ephjzHm/pw.2tamgdjQtKDq', 1, 'Aaron', 'Isaacs', 'aaron.isaacs.ing@gmail.com');
 insert into usuarios (username, password, enabled, nombre, apellido, email) values ('admin', '$2a$10$wqAcDKT98ebJsntsmJqPluGu86fDJP55JnwYGTWU6eVKS1nBv7N7K', 1, 'System', 'Admin', 'sysadmin@aarodev.com');
 
@@ -29,3 +31,22 @@ insert into roles (nombre) values ('ROLE_ADMIN');
 insert into usuarios_roles (usuario_id, rol_id) values (1, 1);
 insert into usuarios_roles (usuario_id, rol_id) values (2, 2);
 insert into usuarios_roles (usuario_id, rol_id) values (2, 1);
+
+/* Crear tabla productos */
+insert into productos (nombre, precio, create_at) values ('Panasonic Pantalla LCD', 259990, now());
+insert into productos (nombre, precio, create_at) values ('Sony Camara figital DSC-W3200', 123490, now());
+insert into productos (nombre, precio, create_at) values ('Apple iPod shuffle', 1499990, now());
+insert into productos (nombre, precio, create_at) values ('Sony Notebook Z110', 37990, now());
+insert into productos (nombre, precio, create_at) values ('Hewlett Packard Multifuncional P2200', 69990, now());
+insert into productos (nombre, precio, create_at) values ('Bianchi Bicicleta Aro 26', 69990, now());
+insert into productos (nombre, precio, create_at) values ('Mica Comoda 5 cajones', 299990, now());
+
+/* Crear facturas */
+insert into facturas (descripcion, observacion, cliente_id, create_at) values ('Factura equipos de oficiona', null, 1, now());
+insert into facturas_item (cantidad, factura_id, producto_id) values (1, 1, 1);
+insert into facturas_item (cantidad, factura_id, producto_id) values (2, 1, 4);
+insert into facturas_item (cantidad, factura_id, producto_id) values (1, 1, 5);
+insert into facturas_item (cantidad, factura_id, producto_id) values (1, 1, 6);
+
+insert into facturas (descripcion, observacion, cliente_id, create_at) values ('Factura Bicicleta', 'Alguana nota importante', 1, now());
+insert into facturas_item (cantidad, factura_id, producto_id) values (3, 2, 6);

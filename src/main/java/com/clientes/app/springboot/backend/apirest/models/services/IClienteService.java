@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.clientes.app.springboot.backend.apirest.models.entity.Cliente;
+import com.clientes.app.springboot.backend.apirest.models.entity.Factura;
+import com.clientes.app.springboot.backend.apirest.models.entity.Producto;
 
 public interface IClienteService {
 	
@@ -18,5 +20,13 @@ public interface IClienteService {
 	public Cliente save(Cliente cliente);
 	
 	public void delete(Long id);
-
+	
+	public Factura findFacturaById(Long id);
+	
+	public Factura saveFactura(Factura factura);
+	
+	public void deleteFacturaById(Long id);
+	
+	public List<Producto> findProductoByNombre(String nombre);
+	
 }
